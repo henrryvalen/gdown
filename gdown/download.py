@@ -97,6 +97,7 @@ def download(
     id=None,
     fuzzy=False,
     resume=False,
+    bar=None,
 ):
     """Download file from URL.
 
@@ -125,6 +126,9 @@ def download(
     resume: bool
         Resume the download from existing tmp file if possible.
         Default is False.
+    bar: type
+        A user defined progress bar. It should be followed by the arguments
+        current size and total size respectively.
 
     Returns
     -------
@@ -135,6 +139,9 @@ def download(
         raise ValueError("Either url or id has to be specified")
     if id is not None:
         url = "https://drive.google.com/uc?id={id}".format(id=id)
+
+    if bar is not None and not callable(bar):
+        raise ValueError("Parameter bar should be callable and respect arguments of cur_size and total_size")
 
     url_origin = url
 
@@ -268,19 +275,26 @@ def download(
         total = res.headers.get("Content-Length")
         if total is not None:
             total = int(total)
-        if not quiet:
+        if not quiet and bar is None:
             pbar = tqdm.tqdm(total=total, unit="B", unit_scale=True)
+
         t_start = time.time()
+
+        chunk_count = 0
         for chunk in res.iter_content(chunk_size=CHUNK_SIZE):
             f.write(chunk)
             if not quiet:
-                pbar.update(len(chunk))
+                if bar is None:
+                    pbar.update(len(chunk))
+                else:
+                    chunk_count += len(chunk)
+                    bar(chunk_count, total)
             if speed is not None:
                 elapsed_time_expected = 1.0 * pbar.n / speed
                 elapsed_time = time.time() - t_start
                 if elapsed_time < elapsed_time_expected:
                     time.sleep(elapsed_time_expected - elapsed_time)
-        if not quiet:
+        if not quiet and bar is None:
             pbar.close()
         if tmp_file:
             f.close()
