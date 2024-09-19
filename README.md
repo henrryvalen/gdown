@@ -127,6 +127,8 @@ help. Follow this step: 1) download cookies.txt using browser extensions like
 If you're using `gdown>=5.0.0`, it should be able to use the cookies same as your browser.
 
 
+https://medium.com/@saurabh.sde/fast-and-easy-ways-to-download-large-google-drive-files-or-folders-ad9985a04ed9
+
 ## License
 
 MIT
